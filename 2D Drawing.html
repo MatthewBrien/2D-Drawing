@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Draw Application</title>
+        
+        <!-- Student Note: The WebGL book places the shader code inside strings in the JavaScript .js file.
+             That strategy makes sense for very simple examples, but it does not work well for 'real' programs.
+             Henceforth, you should put your Shader scripts in the HTML file, each with a unique id string value.
+             This is also the strategy your textbook uses.
+          -->
+        <script id="vertex-shader" type="x-shader/x-vertex">
+
+            attribute vec4 a_Position;
+
+            void main()
+                {   
+                gl_Position = a_Position;
+                gl_PointSize = 15.0;
+                } 
+        </script>
+
+        <script id="fragment-shader" type="x-shader/x-fragment">
+
+            precision mediump float;
+            uniform vec4 u_FragColor;
+
+            void main()
+                {
+                gl_FragColor = u_FragColor;
+                }
+        </script>               
+    </head>
+
+    <body onload="main()">
+        <!-- create canvas -->
+        <div style="float:left">
+            <canvas id="webgl" width="600" height="600">
+                Please use a browser that supports "canvas"
+            </canvas>
+        </div>
+
+        <!-- create GUI components -->
+        <div style="width:300px; float:left; margin-left:50px;">
+            <!-- buttons 
+                 Student Note: See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button 
+              -->
+            <button id = "LineButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">Line</button><br>
+            <button id = "TriangleButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">Triangle</button><br>
+            <button id = "QuadButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">Quad</button><br>
+            <button id = "DeleteButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">Delete</button><br>
+            <button id = "ClearScreenButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">ClearScreen</button><br>
+            <!-- sliders 
+                 Student Note:  See https://www.w3.org/wiki/HTML/Elements/input/range
+              -->
+            Red: <input type="range" id="RedRange"><br>
+            Green: <input type="range" id="GreenRange"><br>
+            Blue: <input type="range" id="BlueRange"><br>
+        </div>
+
+        <!-- load JS scripts -->
+        <script src="../lib/webgl-utils.js"></script>
+        <script src="../lib/webgl-debug.js"></script>
+        <script src="../lib/cuon-utils.js"></script>
+        <script src="../lib/uncc_webgl_utils/uncc_webgl_utils.js"></script>
+        <script src="2D Drawing.js"></script>
+    </body>
+</html>
