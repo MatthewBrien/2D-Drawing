@@ -150,8 +150,8 @@ Vec2.prototype.multiply = function (m)
  */
 Vec2.prototype.rightMultiply = function (m)
 {
-     this.array.set([this.array[0]*m.array[0] + this.array[1]*m.array[2],
-                     this.array[0]*m.array[1] + this.array[1]*m.array[3] ]);
+     this.array.set([this.array[0]*m.array[0] + this.array[1]*m.array[1],
+                     this.array[0]*m.array[2] + this.array[1]*m.array[3] ]);
 };
 
 /**
