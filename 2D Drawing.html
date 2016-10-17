@@ -55,10 +55,14 @@
             <!-- sliders
                  Student Note:  See https://www.w3.org/wiki/HTML/Elements/input/range
               -->
-            Red: <input type="range" id="RedRange"><br>
-            Green: <input type="range" id="GreenRange"><br>
-            Blue: <input type="range" id="BlueRange"><br>
-            <p id="Coords"> </p>
+            <div>
+                <div>Red: <input type="range" id="RedRange"></div>
+                <div>Green: <input type="range" id="GreenRange"></div>
+                <div>Blue: <input type="range" id="BlueRange"></div>  <br>
+                <canvas onload="updateColors([0,0,0])" id="CurrColor" width="200" height="10"></canvas>
+
+          </div>
+                      <p id="Coords"> </p>
         </div>
 
         <!-- load JS scripts -->
@@ -72,14 +76,41 @@
         <!-- display the coordinates currently hovered over by mouse -->
         <script>
           function showCoords(ev) {
-              console.log("hello");
               var x = ev.clientX;
               var y = ev.clientY;
               var coor = "Coordinates: (" + x + "," + y + ")";
               document.getElementById("Coords").innerHTML = coor;
           }
           function clearCoords(){
-              document.getElementById("Coords").innerHTML = "";
+              document.getElementById("Coords").innerHTML = "Coordinates: ";
+          }
+          function updateColor(colors){
+            console.log(colors[0] + " "+colors[1] + " "+colors[2] + " ") ;
+            red = Math.floor(colors[0]*2.55);
+            green = Math.floor(colors[1]*2.55);
+            blue = Math.floor(colors[2]*2.55);
+
+            var c = document.getElementById("CurrColor");
+            var ctx = c.getContext("2d");
+            var color = "#";
+            if (red <=15){
+              color+="0";
+            }
+            color+= red.toString(16).toUpperCase();
+           if(green<=15){
+              color+= "0";
+            }
+            color+= green.toString(16).toUpperCase();
+
+            if(blue<=15){
+              color+= "0";
+            }
+            color+= blue.toString(16).toUpperCase();
+
+            ctx.fillStyle = color;
+            ctx.fillRect(0,0,200,10);
+
+
           }
         </script>
     </body>

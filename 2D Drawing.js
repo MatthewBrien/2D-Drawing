@@ -1,14 +1,14 @@
 /**
  * @author Jialei Li, K.R. Subrmanian, Zachary Wartell
- * 
- * 
+ *
+ *
  */
 
 
 /*****
- * 
+ *
  * GLOBALS
- * 
+ *
  *****/
 
 // 'draw_mode' are names of the different user interaction modes.
@@ -32,20 +32,19 @@ var num_pts_line = 0;
 
 // \todo need similar counters for other draw modes...
 
-
+var currentColors = [0,100,0];
 /*****
- * 
+ *
  * MAIN
- * 
+ *
  *****/
 function main() {
-    
     //math2d_test();
-    
+
     /**
      **      Initialize WebGL Components
      **/
-    
+
     // Retrieve <canvas> element
     var canvas = document.getElementById('webgl');
 
@@ -85,7 +84,7 @@ function main() {
 
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
-
+    updateColor(currentColors);  //fill color preview canvas
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -119,8 +118,8 @@ function main() {
             "click",
             function () {
                 curr_draw_mode = draw_mode.DrawTriangles;
-            });    
-    
+            });
+
     document.getElementById("ClearScreenButton").addEventListener(
             "click",
             function () {
@@ -134,36 +133,40 @@ function main() {
                     tri_verts.pop();
 
                 gl.clear(gl.COLOR_BUFFER_BIT);
-                
+
                 curr_draw_mode = draw_mode.DrawLines;
             });
-            
-    //\todo add event handlers for other buttons as required....            
+
+    //\todo add event handlers for other buttons as required....
 
     // set event handlers for color sliders
     /* \todo right now these just output to the console, code needs to be modified... */
     document.getElementById("RedRange").addEventListener(
             "input",
             function () {
-                console.log("RedRange:" + document.getElementById("RedRange").value);
+              currentColors[0] = document.getElementById("RedRange").value;
+                updateColor(currentColors);
             });
     document.getElementById("GreenRange").addEventListener(
             "input",
             function () {
-                console.log("GreenRange:" + document.getElementById("GreenRange").value);
+              currentColors[1] = document.getElementById("GreenRange").value;
+                updateColor(currentColors);
+
             });
     document.getElementById("BlueRange").addEventListener(
             "input",
             function () {
-                console.log("BlueRange:" + document.getElementById("BlueRange").value);
-            });                        
-            
-    // init sliders 
+              currentColors[2] = document.getElementById("BlueRange").value;
+                updateColor(currentColors);
+            });
+
+    // init sliders
     // \todo this code needs to be modified ...
-    document.getElementById("RedRange").value = 0;
-    document.getElementById("GreenRange").value = 100;
-    document.getElementById("BlueRange").value = 0;
-            
+    document.getElementById("RedRange").value = currentColors[0];
+    document.getElementById("GreenRange").value = currentColors[1];
+    document.getElementById("BlueRange").value = currentColors[2];
+
     // Register function (event handler) to be called on a mouse press
     canvas.addEventListener(
             "mousedown",
@@ -173,17 +176,17 @@ function main() {
 }
 
 /*****
- * 
+ *
  * FUNCTIONS
- * 
+ *
  *****/
 
 /*
  * Handle mouse button press event.
- * 
+ *
  * @param {MouseEvent} ev - event that triggered event handler
  * @param {Object} gl - gl context
- * @param {HTMLCanvasElement} canvas - canvas 
+ * @param {HTMLCanvasElement} canvas - canvas
  * @param {Number} a_Position - GLSL (attribute) vertex location
  * @param {Number} u_FragColor - GLSL (uniform) color
  * @returns {undefined}
@@ -192,9 +195,9 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
     var x = ev.clientX; // x coordinate of a mouse pointer
     var y = ev.clientY; // y coordinate of a mouse pointer
     var rect = ev.target.getBoundingClientRect();
-    
+
     // Student Note: 'ev' is a MouseEvent (see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent)
-    
+
     // convert from canvas mouse coordinates to GL normalized device coordinates
     x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2);
     y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2);
@@ -208,12 +211,12 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
     switch (curr_draw_mode) {
         case draw_mode.DrawLines:
             // in line drawing mode, so draw lines
-            if (num_pts_line < 1) {			
+            if (num_pts_line < 1) {
                 // gathering points of new line segment, so collect points
                 line_verts.push([x, y]);
                 num_pts_line++;
             }
-            else {						
+            else {
                 // got final point of new line, so update the primitive arrays
                 line_verts.push([x, y]);
                 num_pts_line = 0;
@@ -221,7 +224,7 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
             }
             break;
     }
-    
+
     drawObjects(gl,a_Position, u_FragColor);
 }
 
@@ -238,7 +241,8 @@ function drawObjects(gl, a_Position, u_FragColor) {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // draw lines
-    if (line_verts.length) {	
+    //TODO // push color to array, draw each line the correct color
+    if (line_verts.length) {
         // enable the line vertex
         gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Line);
         // set vertex data into buffer (inefficient)
@@ -253,17 +257,17 @@ function drawObjects(gl, a_Position, u_FragColor) {
     }
 
    // \todo draw triangles
-   
+
    // \todo draw quads
-    
-    // draw primitive creation vertices 
+
+    // draw primitive creation vertices
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Pnt);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(a_Position);
 
     gl.uniform4f(u_FragColor, 1.0, 1.0, 1.0, 1.0);
-    gl.drawArrays(gl.POINTS, 0, points.length);    
+    gl.drawArrays(gl.POINTS, 0, points.length);
 }
 
 /**
