@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <title>Draw Application</title>
-        
+
         <!-- Student Note: The WebGL book places the shader code inside strings in the JavaScript .js file.
              That strategy makes sense for very simple examples, but it does not work well for 'real' programs.
              Henceforth, you should put your Shader scripts in the HTML file, each with a unique id string value.
@@ -14,10 +14,10 @@
             attribute vec4 a_Position;
 
             void main()
-                {   
+                {
                 gl_Position = a_Position;
-                gl_PointSize = 15.0;
-                } 
+                gl_PointSize = 10.0;
+                }
         </script>
 
         <script id="fragment-shader" type="x-shader/x-fragment">
@@ -29,35 +29,36 @@
                 {
                 gl_FragColor = u_FragColor;
                 }
-        </script>               
+        </script>
     </head>
 
     <body onload="main()">
         <!-- create canvas -->
         <h1 id = "App_Title">2D Drawing</h1>
-        
+
         <div style="float:left">
-            <canvas id="webgl" width="600" height="600">
+            <canvas id="webgl" width="600" height="600" onmousemove="showCoords(event)" onmouseout="clearCoords()">
                 Please use a browser that supports "canvas"
             </canvas>
         </div>
-               
+
         <!-- create GUI components -->
         <div style="width:300px; float:left; margin-left:50px;">
-            <!-- buttons 
-                 Student Note: See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button 
+            <!-- buttons
+                 Student Note: See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button
               -->
             <button id = "LineButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">Line</button><br>
             <button id = "TriangleButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">Triangle</button><br>
             <button id = "QuadButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">Quad</button><br>
             <button id = "DeleteButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">Delete</button><br>
             <button id = "ClearScreenButton" style="margin-bottom:10px;margin-top:10px;height:40px; width:100px">ClearScreen</button><br>
-            <!-- sliders 
+            <!-- sliders
                  Student Note:  See https://www.w3.org/wiki/HTML/Elements/input/range
               -->
             Red: <input type="range" id="RedRange"><br>
             Green: <input type="range" id="GreenRange"><br>
             Blue: <input type="range" id="BlueRange"><br>
+            <p id="Coords"> </p>
         </div>
 
         <!-- load JS scripts -->
@@ -67,5 +68,19 @@
         <script src="../lib/uncc_webgl_utils/uncc_webgl_utils.js"></script>
         <script src="math2D.js"></script>
         <script src="2D Drawing.js"></script>
+
+        <!-- display the coordinates currently hovered over by mouse -->
+        <script>
+          function showCoords(ev) {
+              console.log("hello");
+              var x = ev.clientX;
+              var y = ev.clientY;
+              var coor = "Coordinates: (" + x + "," + y + ")";
+              document.getElementById("Coords").innerHTML = coor;
+          }
+          function clearCoords(){
+              document.getElementById("Coords").innerHTML = "";
+          }
+        </script>
     </body>
 </html>
