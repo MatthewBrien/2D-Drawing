@@ -13,7 +13,7 @@
 
 // 'draw_mode' are names of the different user interaction modes.
 // \todo Student Note: others are probably needed...
-var draw_mode = {DrawLines: 0, DrawTriangles: 1, ClearScreen: 2, None: 3};
+var draw_mode = {DrawLines: 0, DrawTriangles: 1, DrawQuads:2, ClearScreen: 3, None: 4};
 
 // 'curr_draw_mode' tracks the active user interaction mode
 var curr_draw_mode = draw_mode.DrawLines;
@@ -25,14 +25,15 @@ var vBuffer_Pnt, vBuffer_Line;
 // Array's storing 2D vertex coordinates of points, lines, triangles, etc.
 // Each array element is an array of size 2 storing the x,y coordinate.
 // \todo Student Note: need similar arrays for other draw modes...
-var points = [], line_verts = [], tri_verts = [];
+var points = [], line_verts = [], tri_verts = [], quad_verts = [];
+var line_colors = [], tri_colors = [],   quad_colors = [];
 
 // count number of points clicked for new line
-var num_pts_line = 0;
+var num_pts = 0;
 
 // \todo need similar counters for other draw modes...
 
-var currentColors = [0,100,0];
+var current_colors = [0,100,0];
 /*****
  *
  * MAIN
@@ -84,7 +85,7 @@ function main() {
 
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
-    updateColor(currentColors);  //fill color preview canvas
+    updateColor(current_colors);  //fill color preview canvas
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -111,15 +112,38 @@ function main() {
     document.getElementById("LineButton").addEventListener(
             "click",
             function () {
+              if(curr_draw_mode != draw_mode.DrawLines){
+                clearUndrawnPoints();//delete vertecies of undrawn shapes, and points
+                drawObjects(gl,a_Position, u_FragColor);//redraw without points
+              }
                 curr_draw_mode = draw_mode.DrawLines;
             });
 
     document.getElementById("TriangleButton").addEventListener(
             "click",
             function () {
+              if(curr_draw_mode != draw_mode.DrawTriangles){
+                clearUndrawnPoints();//delete vertecies of undrawn shapes, and points
+                drawObjects(gl,a_Position, u_FragColor);//redraw without points
+              }
                 curr_draw_mode = draw_mode.DrawTriangles;
             });
-
+            //event handler for QuadButton
+    document.getElementById("QuadButton").addEventListener(
+            "click",
+            function(){
+            if(curr_draw_mode != draw_mode.DrawQuads){
+              clearUndrawnPoints(); //delete vertecies of undrawn shapes, and points
+              drawObjects(gl,a_Position, u_FragColor);  //redraw without points
+              }
+            console.log("quad " + draw_mode.DrawQuads);
+            curr_draw_mode = draw_mode.DrawQuads;
+          });
+    document.getElementById("DeleteButton").addEventListener(
+      "click",
+      function(){
+        console.log("TODO: do something when delete button is clicked")
+      });
     document.getElementById("ClearScreenButton").addEventListener(
             "click",
             function () {
@@ -131,7 +155,14 @@ function main() {
                     line_verts.pop();
                 while (tri_verts.length > 0)
                     tri_verts.pop();
-
+                while(quad_verts.length > 0)
+                    quad_verts.pop();
+                while(line_colors.length > 0)
+                    line_colors.pop();
+                while(tri_colors.length>0)
+                    tri_colors.pop();
+                while(quad_colors.length >0)
+                    quad_colors.pop();
                 gl.clear(gl.COLOR_BUFFER_BIT);
 
                 curr_draw_mode = draw_mode.DrawLines;
@@ -139,33 +170,32 @@ function main() {
 
     //\todo add event handlers for other buttons as required....
 
-    // set event handlers for color sliders
-    /* \todo right now these just output to the console, code needs to be modified... */
+    // Color sliders update global current color variable, and the color preview canvas
     document.getElementById("RedRange").addEventListener(
             "input",
             function () {
-              currentColors[0] = document.getElementById("RedRange").value;
-                updateColor(currentColors);
+              current_colors[0] = document.getElementById("RedRange").value;
+                updateColor(current_colors);
             });
     document.getElementById("GreenRange").addEventListener(
             "input",
             function () {
-              currentColors[1] = document.getElementById("GreenRange").value;
-                updateColor(currentColors);
+              current_colors[1] = document.getElementById("GreenRange").value;
+                updateColor(current_colors);
 
             });
     document.getElementById("BlueRange").addEventListener(
             "input",
             function () {
-              currentColors[2] = document.getElementById("BlueRange").value;
-                updateColor(currentColors);
+              current_colors[2] = document.getElementById("BlueRange").value;
+                updateColor(current_colors);
             });
 
     // init sliders
-    // \todo this code needs to be modified ...
-    document.getElementById("RedRange").value = currentColors[0];
-    document.getElementById("GreenRange").value = currentColors[1];
-    document.getElementById("BlueRange").value = currentColors[2];
+    //sliders are initialized from global current_colors variable;
+    document.getElementById("RedRange").value = current_colors[0];
+    document.getElementById("GreenRange").value = current_colors[1];
+    document.getElementById("BlueRange").value = current_colors[2];
 
     // Register function (event handler) to be called on a mouse press
     canvas.addEventListener(
@@ -211,20 +241,27 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
     switch (curr_draw_mode) {
         case draw_mode.DrawLines:
             // in line drawing mode, so draw lines
-            if (num_pts_line < 1) {
+            if (num_pts < 1) {
                 // gathering points of new line segment, so collect points
                 line_verts.push([x, y]);
-                num_pts_line++;
+                num_pts++;
             }
             else {
                 // got final point of new line, so update the primitive arrays
+                //push next vertex
                 line_verts.push([x, y]);
-                num_pts_line = 0;
+                //push color
+                line_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
+                num_pts = 0;
                 points.length = 0;
             }
             break;
-    }
-
+      case draw_mode.DrawTriangles:
+        if(num_pts < 2){
+          //
+        }
+        break;
+  }
     drawObjects(gl,a_Position, u_FragColor);
 }
 
@@ -235,6 +272,27 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
  * @param {Number} u_FragColor - color uniform variable
  * @returns {undefined}
  */
+//if draw mode is changed, delete the vertices associated with undrawn lines, triangles, and quads
+//remove the vertices of incomplete shapes from the respective vertex array
+function clearUndrawnPoints(){
+  if(num_pts > 0){
+    switch(curr_draw_mode){
+      case draw_mode.DrawLines:
+          line_verts.splice(line_verts.length - num_pts, num_pts);
+          break;
+      case draw_mode.DrawTriangles:
+            tri_verts.splice(tri_verts.length - num_pts, num_pts);
+            break;
+      case draw_mode.DrawQuads:
+            quad_verts.splice(quad_verts.length - num_pts, num_pts);
+            break;
+    }
+  }
+  while(points.length > 0)
+    points.pop();
+  num_pts = 0;
+}
+
 function drawObjects(gl, a_Position, u_FragColor) {
 
     // Clear <canvas>
@@ -251,9 +309,13 @@ function drawObjects(gl, a_Position, u_FragColor) {
         gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(a_Position);
 
-        gl.uniform4f(u_FragColor, 0.0, 1.0, 0.0, 1.0);
-        // draw the lines
-        gl.drawArrays(gl.LINES, 0, line_verts.length );
+        //for each line, get vertices and color
+        for(var i = 0; i< line_colors.length; i++){
+          //get matching color and line
+          gl.uniform4f(u_FragColor, line_colors[i][0]/100, line_colors[i][1]/100, line_colors[i][2]/100, 1.0);
+          // draw the lines
+          gl.drawArrays(gl.LINES, i*2, 2);
+        }
     }
 
    // \todo draw triangles
