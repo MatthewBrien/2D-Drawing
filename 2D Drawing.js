@@ -19,8 +19,10 @@ var draw_mode = {DrawLines: 0, DrawTriangles: 1, DrawQuads:2, ClearScreen: 3, No
 var curr_draw_mode = draw_mode.DrawLines;
 
 // GL array buffers for points, lines, and triangles
-// \todo Student Note: need similar buffers for other draw modes...
+// TODO Student Note: need similar buffers for other draw modes...
 var vBuffer_Pnt, vBuffer_Line;
+var vBuffer_Tri;
+var vBuffer_Quad;
 
 // Array's storing 2D vertex coordinates of points, lines, triangles, etc.
 // Each array element is an array of size 2 storing the x,y coordinate.
@@ -74,13 +76,25 @@ function main() {
         console.log('Failed to create the buffer object');
         return -1;
     }
+    vBuffer_Tri = gl.createBuffer();
+    if(!vBuffer_Tri){
+      console.log("Failed to create triangle buffer");
+      return -1;
+    }
 
+    vBuffer_Quad = gl.createBuffer();
+    if(!vBuffer_Quad){
+      console.log("Failed to create quad buffer");
+      return -1;
+    }
+
+/*
     var skeleton=true;
     if(skeleton)
     {
-        document.getElementById("App_Title").innerHTML += "-Skeleton";
+        document.getElementById("App_Title").innerHTML ;
     }
-
+*/
     // \todo create buffers for triangles and quads...
 
     // Specify the color for clearing <canvas>
@@ -168,8 +182,6 @@ function main() {
                 curr_draw_mode = draw_mode.DrawLines;
             });
 
-    //\todo add event handlers for other buttons as required....
-
     // Color sliders update global current color variable, and the color preview canvas
     document.getElementById("RedRange").addEventListener(
             "input",
@@ -253,12 +265,19 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
                 //push color
                 line_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
                 num_pts = 0;
-                points.length = 0;
+                points.length = 0; //TODO, why are we changing lenght, an attribute?
             }
             break;
       case draw_mode.DrawTriangles:
         if(num_pts < 2){
-          //
+          tri_verts.push([x, y]);
+          num_pts++
+        }
+        else{
+          tri_verts.push([x, y]);
+          tri_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
+          num_pts = 0;
+          points.length = 0;
         }
         break;
   }
@@ -299,7 +318,6 @@ function drawObjects(gl, a_Position, u_FragColor) {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // draw lines
-    //TODO // push color to array, draw each line the correct color
     if (line_verts.length) {
         // enable the line vertex
         gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Line);
@@ -318,7 +336,17 @@ function drawObjects(gl, a_Position, u_FragColor) {
         }
     }
 
-   // \todo draw triangles
+    //draw triangles
+   if(tri_verts.length){
+     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Tri);
+     gl.bufferData(gl.ARRAY_BUFFER, flatten(tri_verts), gl.STATIC_DRAW);
+     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+     gl.enableVertexAttribArray(a_Position);
+     for(var i = 0; i < tri_colors.length; i++){
+       gl.uniform4f(u_FragColor, tri_colors[i][0]/100, tri_colors[i][1]/100, tri_colors[i][2]/100, 1.0);
+       gl.drawArrays(gl.TRIANGLES, i*3, 3);
+     }
+   }
 
    // \todo draw quads
 
