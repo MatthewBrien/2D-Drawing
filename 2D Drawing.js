@@ -95,7 +95,7 @@ function main() {
         document.getElementById("App_Title").innerHTML ;
     }
 */
-    // \todo create buffers for triangles and quads...
+
 
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
@@ -161,7 +161,7 @@ function main() {
     document.getElementById("ClearScreenButton").addEventListener(
             "click",
             function () {
-                curr_draw_mode = draw_mode.ClearScreen;
+                // curr_draw_mode = draw_mode.ClearScreen;
                 // clear the vertex arrays
                 while (points.length > 0)
                     points.pop();
@@ -280,6 +280,32 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
           points.length = 0;
         }
         break;
+      case draw_mode.DrawQuads:
+      if(num_pts < 3){
+        quad_verts.push([x, y]);
+        num_pts++
+      }
+      else{
+        var temp_verts = []; //get last 3 vertices
+        for(var i = 0; i<3; i++)
+        {
+          temp_verts.push(quad_verts[quad_verts.length-1]);
+          quad_verts.pop();
+        }
+        temp_verts.push([x, y]);//push last
+        temp_verts = sort_verts(temp_verts); //sort vertices in clockwise order
+        for(var i = 0; i<4; i++){
+          console.log("Pushing " + temp_verts[i])
+          quad_verts.push(temp_verts[i]);
+        }
+        for(var i = 0; i<4; i++){
+          temp_verts.pop();
+        }
+        quad_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
+        num_pts = 0;
+        points.length = 0;
+        console.log(quad_verts);
+      }
   }
     drawObjects(gl,a_Position, u_FragColor);
 }
@@ -348,14 +374,22 @@ function drawObjects(gl, a_Position, u_FragColor) {
      }
    }
 
-   // \todo draw quads
-
+   // draw quads
+   if(quad_verts.length){
+     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Quad);
+     gl.bufferData(gl.ARRAY_BUFFER, flatten(quad_verts), gl.STATIC_DRAW);
+     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+     gl.enableVertexAttribArray(a_Position);
+     for(var i = 0; i < quad_colors.length; i++){
+       gl.uniform4f(u_FragColor, quad_colors[i][0]/100, quad_colors[i][1]/100, quad_colors[i][2]/100, 1.0);
+       gl.drawArrays(gl.TRIANGLE_STRIP, i*4, 4);
+     }
+   }
     // draw primitive creation vertices
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Pnt);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(a_Position);
-
     gl.uniform4f(u_FragColor, 1.0, 1.0, 1.0, 1.0);
     gl.drawArrays(gl.POINTS, 0, points.length);
 }
@@ -392,4 +426,32 @@ function flatten(v)
     }
 
     return floats;
+}
+
+function sort_verts(temp_verts){
+  var final_verts = [];
+  while(temp_verts.length > 0){
+    var maxX = 0;
+    for(var i = 0; i < temp_verts.length; i++){
+      if(temp_verts[i][0] > temp_verts[maxX][0])
+        maxX = i;
+    }
+    final_verts.push([temp_verts[maxX][0], temp_verts[maxX][1]]);
+    temp_verts.splice(maxX, 1);
+    console.log("final");
+    console.log(flatten(final_verts));
+    console.log("temp");
+    console.log(flatten(temp_verts));
+  }
+
+  while(final_verts.length > 0){
+    var maxX = 0;
+    for(var i = 0; i < final_verts.length; i++){
+      if(final_verts[i][0] > final_verts[maxX][0])
+        maxX = i
+    }
+    temp_verts.push([final_verts[maxX][0], final_verts[maxX][1]]);
+    final_verts.splice(maxX, 1);
+  }
+  return temp_verts;
 }
