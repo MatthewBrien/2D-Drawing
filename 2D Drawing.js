@@ -131,6 +131,7 @@ function main() {
                 drawObjects(gl,a_Position, u_FragColor);//redraw without points
               }
                 curr_draw_mode = draw_mode.DrawLines;
+                change_buttons("LineButton");
             });
 
     document.getElementById("TriangleButton").addEventListener(
@@ -141,6 +142,7 @@ function main() {
                 drawObjects(gl,a_Position, u_FragColor);//redraw without points
               }
                 curr_draw_mode = draw_mode.DrawTriangles;
+                change_buttons("TriangleButton");
             });
             //event handler for QuadButton
     document.getElementById("QuadButton").addEventListener(
@@ -150,7 +152,7 @@ function main() {
               clearUndrawnPoints(); //delete vertecies of undrawn shapes, and points
               drawObjects(gl,a_Position, u_FragColor);  //redraw without points
               }
-            console.log("quad " + draw_mode.DrawQuads);
+            change_buttons("QuadButton");
             curr_draw_mode = draw_mode.DrawQuads;
           });
     document.getElementById("DeleteButton").addEventListener(
@@ -161,7 +163,7 @@ function main() {
     document.getElementById("ClearScreenButton").addEventListener(
             "click",
             function () {
-                curr_draw_mode = draw_mode.ClearScreen;
+                // curr_draw_mode = draw_mode.ClearScreen;
                 // clear the vertex arrays
                 while (points.length > 0)
                     points.pop();
@@ -234,6 +236,7 @@ function main() {
  * @returns {undefined}
  */
 function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
+  console.log(ev.which);
     var x = ev.clientX; // x coordinate of a mouse pointer
     var y = ev.clientY; // y coordinate of a mouse pointer
     var rect = ev.target.getBoundingClientRect();
@@ -430,48 +433,53 @@ function flatten(v)
 
 //for triangle Strip to draw a quad, vertecies need to be in order NW, SW, NE, SE
 function sort_verts(temp_verts){
-  var center = [0,0];
-  var final_verts = [];
-  for(var i = 0; i < 4; i++){
-    center[0] += temp_verts[i][0];
-    center[1] += temp_verts[i][1];
-  }
-  center[0] = center[0]/4;
-  center[1] = center[1]/4;
-  //console.log("center: " + center[0] + " " + center[1]);
-//nortWest
-
-console.log(center[0]);
-console.log(center[1]);
-  for(var i = 0; i < temp_verts.length; i++){
-    if(temp_verts[i][0] <= center[0] && temp_verts[i][1] >= center[1]){
-      final_verts.push(temp_verts[i]);
-      temp_verts.splice(i, 1);
+    var center = [0,0];
+    var final_verts = [];
+    for(var i = 0; i < 4; i++){
+      center[0] += temp_verts[i][0];
+      center[1] += temp_verts[i][1];
     }
-  }
+    center[0] = center[0]/4;
+    center[1] = center[1]/4;
+    //console.log("center: " + center[0] + " " + center[1]);
+  //nortWest
 
-//southWEst
-  for(var i = 0; i< temp_verts.length; i++){
-    if(temp_verts[i][0] <= center[0] && temp_verts[i][1] <= center[1]){
-      final_verts.push(temp_verts[i]);
-      temp_verts.splice(i, 1);
+    for(var i = 0; i < temp_verts.length; i++){
+      if(temp_verts[i][0] <= center[0] && temp_verts[i][1] >= center[1]){
+        final_verts.push(temp_verts[i]);
+        temp_verts.splice(i, 1);
+      }
     }
-  }
 
-//northEAst
-  for(var i = 0; i<temp_verts.length; i++){
-    if(temp_verts[i][0] >= center[0] && temp_verts[i][1] >= center[1]){
-      final_verts.push(temp_verts[i]);
-      temp_verts.splice(i, 1);
+  //southWEst
+    for(var i = 0; i< temp_verts.length; i++){
+      if(temp_verts[i][0] <= center[0] && temp_verts[i][1] <= center[1]){
+        final_verts.push(temp_verts[i]);
+        temp_verts.splice(i, 1);
+      }
     }
+
+  //northEAst
+    for(var i = 0; i<temp_verts.length; i++){
+      if(temp_verts[i][0] >= center[0] && temp_verts[i][1] >= center[1]){
+        final_verts.push(temp_verts[i]);
+        temp_verts.splice(i, 1);
+      }
+    }
+
+    //any remaining points
+  while(temp_verts.length > 0){
+    final_verts.push(temp_verts[0]);
+    temp_verts.splice(0, 1);
   }
 
-  //any remaining points
-while(temp_verts.length > 0){
-  final_verts.push(temp_verts[0]);
-  temp_verts.splice(0, 1);
+      return final_verts;
+
 }
 
-    return final_verts;
-
+function change_buttons(button){
+  document.getElementById("LineButton").style.background='buttonface';
+  document.getElementById("TriangleButton").style.background='buttonface';
+  document.getElementById("QuadButton").style.background='buttonface';
+  document.getElementById(button).style.background='#00b2b0';
 }
