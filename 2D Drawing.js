@@ -161,7 +161,7 @@ function main() {
     document.getElementById("ClearScreenButton").addEventListener(
             "click",
             function () {
-                // curr_draw_mode = draw_mode.ClearScreen;
+                curr_draw_mode = draw_mode.ClearScreen;
                 // clear the vertex arrays
                 while (points.length > 0)
                     points.pop();
@@ -295,9 +295,9 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
         temp_verts.push([x, y]);//push last
         temp_verts = sort_verts(temp_verts); //sort vertices in clockwise order
         for(var i = 0; i<4; i++){
-          console.log("Pushing " + temp_verts[i])
           quad_verts.push(temp_verts[i]);
         }
+        quad_verts.push(temp_verts[0]);
         for(var i = 0; i<4; i++){
           temp_verts.pop();
         }
@@ -382,7 +382,7 @@ function drawObjects(gl, a_Position, u_FragColor) {
      gl.enableVertexAttribArray(a_Position);
      for(var i = 0; i < quad_colors.length; i++){
        gl.uniform4f(u_FragColor, quad_colors[i][0]/100, quad_colors[i][1]/100, quad_colors[i][2]/100, 1.0);
-       gl.drawArrays(gl.TRIANGLE_STRIP, i*4, 4);
+       gl.drawArrays(gl.TRIANGLE_STRIP, i*5, 5);
      }
    }
     // draw primitive creation vertices
@@ -428,30 +428,50 @@ function flatten(v)
     return floats;
 }
 
+//for triangle Strip to draw a quad, vertecies need to be in order NW, SW, NE, SE
 function sort_verts(temp_verts){
+  var center = [0,0];
   var final_verts = [];
-  while(temp_verts.length > 0){
-    var maxX = 0;
-    for(var i = 0; i < temp_verts.length; i++){
-      if(temp_verts[i][0] > temp_verts[maxX][0])
-        maxX = i;
+  for(var i = 0; i < 4; i++){
+    center[0] += temp_verts[i][0];
+    center[1] += temp_verts[i][1];
+  }
+  center[0] = center[0]/4;
+  center[1] = center[1]/4;
+  //console.log("center: " + center[0] + " " + center[1]);
+//nortWest
+
+console.log(center[0]);
+console.log(center[1]);
+  for(var i = 0; i < temp_verts.length; i++){
+    if(temp_verts[i][0] <= center[0] && temp_verts[i][1] >= center[1]){
+      final_verts.push(temp_verts[i]);
+      temp_verts.splice(i, 1);
     }
-    final_verts.push([temp_verts[maxX][0], temp_verts[maxX][1]]);
-    temp_verts.splice(maxX, 1);
-    console.log("final");
-    console.log(flatten(final_verts));
-    console.log("temp");
-    console.log(flatten(temp_verts));
   }
 
-  while(final_verts.length > 0){
-    var maxX = 0;
-    for(var i = 0; i < final_verts.length; i++){
-      if(final_verts[i][0] > final_verts[maxX][0])
-        maxX = i
+//southWEst
+  for(var i = 0; i< temp_verts.length; i++){
+    if(temp_verts[i][0] <= center[0] && temp_verts[i][1] <= center[1]){
+      final_verts.push(temp_verts[i]);
+      temp_verts.splice(i, 1);
     }
-    temp_verts.push([final_verts[maxX][0], final_verts[maxX][1]]);
-    final_verts.splice(maxX, 1);
   }
-  return temp_verts;
+
+//northEAst
+  for(var i = 0; i<temp_verts.length; i++){
+    if(temp_verts[i][0] >= center[0] && temp_verts[i][1] >= center[1]){
+      final_verts.push(temp_verts[i]);
+      temp_verts.splice(i, 1);
+    }
+  }
+
+  //any remaining points
+while(temp_verts.length > 0){
+  final_verts.push(temp_verts[0]);
+  temp_verts.splice(0, 1);
+}
+
+    return final_verts;
+
 }
