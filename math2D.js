@@ -1,31 +1,31 @@
 /**
  * @author Zachary Wartell, ...
- * 
+ *
  * math2D.js is a set of 2D geometry related math functions and classes.
- * 
+ *
  * Students are given a initial set of classes and functions are expected to extend these and add
  * additional functions to this file.
- * 
+ *
  */
 
 /**
- * Constructor of Mat2, a 2x2 matrix 
- * 
+ * Constructor of Mat2, a 2x2 matrix
+ *
  * For efficiency we use a Typed Array.  Elements are stored in 'column major' layout, i.e.
  * for matrix M with math convention M_rc
  *    this.array = [ M_00, M_10,    // first column
  *                   M_01, M_11 ];  // second column
- *                   
- *                   
+ *
+ *
  * column major order is consistent with OpenGL and GLSL
- *                   
- * @param {null}                  
+ *
+ * @param {null}
  * @returns {Mat2}
  */
 var Mat2 = function()
 {
     this.array = new Float32Array(4);
-    this.array.set([1.0, 0.0, 
+    this.array.set([1.0, 0.0,
                     0.0, 1.0]);
 };
 
@@ -62,8 +62,8 @@ Mat2.prototype.det = function ()
 };
 
 /**
- * Constructor of Vec2. Vec2 is is used to represent coordinates of geometric points or vectors. 
- * 
+ * Constructor of Vec2. Vec2 is is used to represent coordinates of geometric points or vectors.
+ *
  * @param {null | Vec2 | [Number, Number]}
  */
 var Vec2 = function ()
@@ -110,7 +110,7 @@ Object.defineProperties(Vec2.prototype,
 
 /**
  * Add Vec2 'v' to this Vec2
- * @param {Vec2} v    
+ * @param {Vec2} v
  */
 Vec2.prototype.add = function (v)
 {
@@ -119,21 +119,21 @@ Vec2.prototype.add = function (v)
 
 /**
  * Subtract Vec2 'v' from this Vec2
- * @param {Vec2} v    
+ * @param {Vec2} v
  */
 Vec2.prototype.sub = function (v)
 {
     /*
      * \todo needs to be implemented
-     */    
+     */
 };
 
 /**
  * Treat this Vec2 as a column matrix and multiply it by Mat2 'm' to it's left, i.e.
- * 
+ *
  * v = m * v
- * 
- * @param {Mat2} m    
+ *
+ * @param {Mat2} m
  */
 Vec2.prototype.multiply = function (m)
 {
@@ -143,9 +143,9 @@ Vec2.prototype.multiply = function (m)
 
 /**
  * Treat this Vec2 as a row matrix and multiply it by Mat2 'm' to it's right, i.e.
- * 
+ *
  * v = v * m
- * 
+ *
  * @param {Mat2} m
  */
 Vec2.prototype.rightMultiply = function (m)
@@ -156,7 +156,7 @@ Vec2.prototype.rightMultiply = function (m)
 
 /**
  * Return the dot product of this Vec2 with Vec2 'v'
- * @param {Vec2} v    
+ * @param {Vec2} v
  * @return {Number}
  */
 Vec2.prototype.dot = function (v)
@@ -168,7 +168,7 @@ Vec2.prototype.dot = function (v)
 };
 
 /**
- * Return the magnitude (i.e. length) of of this Vec2 
+ * Return the magnitude (i.e. length) of of this Vec2
  * @return {Number}
  */
 Vec2.prototype.mag = function ()
@@ -182,7 +182,7 @@ Vec2.prototype.mag = function ()
 /**
  * Compute the barycentric coordinate of point 'p' with respect to barycentric coordinate system
  * defined by points p0,p1,p2.
- * 
+ *
  * @param {Vec2} p0 - first point of barycentric coordinate system
  * @param {Vec2} p1 - second point of barycentric coordinate system
  * @param {Vec2} p2 - third point of barycentric coordinate system
@@ -193,7 +193,7 @@ function barycentric (p0, p1, p2, p)
 {
     /*
      * \todo needs to be implemented
-     */    
+     */
     return [0,0,0];
 }
 
@@ -208,39 +208,105 @@ function pointLineDist(p0, p1, p)
 {
      /*
      * \todo needs to be implemented
-     */    
+     */
     return 0;
 }
 
 /**
  * This contains misc. code for testing the functions in this file.
- * 
+ *
  * Students can optionally use this function for testing their code...
  * @returns {undefined}
  */
 function math2d_test()
 {
     var M1 = new Mat2();
-    var v0 = new Vec2(), v1 = new Vec2([5.0,5.0]), v2, 
+    var v0 = new Vec2(), v1 = new Vec2([5.0,5.0]), v2,
             vx = new Vec2([1.0,0.0]),
             vy = new Vec2([0.0,1.0]);
-    
+
     var rad = 45 * Math.PI/180;
-    M1.set(0,0, Math.cos(rad)); M1.set(1,0, -Math.sin(rad)); 
+    M1.set(0,0, Math.cos(rad)); M1.set(1,0, -Math.sin(rad));
     M1.set(0,1, Math.sin(rad)); M1.set(1,1, Math.cos(rad));
-    
-       
+
+
     v0.x = 1.0;
     v0.y = 2.0;
     v0.y += 1.0;
     v2 = new Vec2(v0);
     v2.add(v1);
-    
-    vx.multiply(M1);       
-    vy.multiply(M1);       
-    
+
+    vx.multiply(M1);
+    vy.multiply(M1);
+
     console.log (JSON.stringify(M1));
     console.log (JSON.stringify(v2));
     console.log (v0.dot(v1));
     console.log (v0.mag());
+
+    console.log("Testing line distance");
+    pointLineDist([1,2],[0,0],[5,5]);
+}
+
+//take a point, and a line (defined by two points) and returns the distance
+function pointLineDist(P, A, B){
+  //P is test point
+  // a is line start
+  //b  is line end
+  //M is line direction - slope
+  var M = subtract_points(B,A); // get line direction vector
+  var T = dot_product(M, subtract_points(P,A)) / dot_product(M,M);
+  //var D =  subtract_points(P, add_points(B, scale_vector(T,M)))//|P−(B + t0M)|.
+  var D;
+  if(T <=0){
+    D =  abs_subtract_vectors(P,A);
+  }
+  if(T< 1){
+    D = abs_subtract_vectors(P, add_points(A, scale_vector(T,M)));
+  }
+  else{
+    D = abs_subtract_vectors(P, add_points(A,M));
+  }
+
+  D =  Math.sqrt((D[0]*D[0] + D[1]*D[1]));
+  return D;
+  }
+//get dot product of two vectors(2D only)
+function dot_product(A,B){
+  product = 0;
+  product += A[0]*B[0] + A[0]*B[1];
+  product += A[1]*B[0] + A[1]*B[1];
+  return product;
+}
+//adds two points together(really two vectors)
+function add_points(A,B){
+  var C = [];
+  for(var i = 0; i < A.length; i++){
+    C.push( A[i]+B[i]);
+  }
+  return C;
+}
+//gets the difference between two points
+function subtract_points(P, B){
+  var final = [];
+  final.push(P[0] - B[0]);
+  final.push(P[1] - B[1]);
+  return final;
+}
+
+function abs_subtract_vectors(A,B){
+  var final=[];
+  for(var i = 0; i< A.length; i++){
+    final.push(Math.abs(A[i] - B[i]));
+  }
+  return final;
+}
+//s is scalar, V is vector
+function scale_vector(S, V){
+  var final = [];
+  for(var i = 0; i<V.length; i++){
+    final.push(V[i] * S);
+
+  }
+  return final;
 }

@@ -12,9 +12,9 @@
  *****/
 
 // 'draw_mode' are names of the different user interaction modes.
-// \todo Student Note: others are probably needed...
 var draw_mode = {DrawLines: 0, DrawTriangles: 1, DrawQuads:2, ClearScreen: 3, None: 4};
-
+//if an object is selected
+var selected = null;
 // 'curr_draw_mode' tracks the active user interaction mode
 var curr_draw_mode = draw_mode.DrawLines;
 
@@ -42,7 +42,7 @@ var current_colors = [0,100,0];
  *
  *****/
 function main() {
-    //math2d_test();
+    math2d_test();
 
     /**
      **      Initialize WebGL Components
@@ -236,7 +236,7 @@ function main() {
  * @returns {undefined}
  */
 function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
-  console.log(ev.which);
+ //  console.log(ev.which);
     var x = ev.clientX; // x coordinate of a mouse pointer
     var y = ev.clientY; // y coordinate of a mouse pointer
     var rect = ev.target.getBoundingClientRect();
@@ -247,6 +247,8 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
     x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2);
     y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2);
 
+//if user left clicked, draw
+if(ev.which == 1){
     if (curr_draw_mode !== draw_mode.None) {
         // add clicked point to 'points'
         points.push([x, y]);
@@ -311,6 +313,18 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
       }
   }
     drawObjects(gl,a_Position, u_FragColor);
+}
+
+  if(ev.which == 3){
+    for(var i = 0; i < line_verts.length; i+=2 ){
+    //  console.log("Distance from line " + i/2 + " is " + pointLineDist([x,y], line_verts[i],line_verts[i+1])  );
+      if(pointLineDist([x,y], line_verts[i],line_verts[i+1]) < .01){
+        console.log("line " + i/2 +" was selected");
+        selected = ["line", i];
+      }
+    }
+
+  }
 }
 
 /*
@@ -477,6 +491,7 @@ function sort_verts(temp_verts){
 
 }
 
+//change color of buttons
 function change_buttons(button){
   document.getElementById("LineButton").style.background='buttonface';
   document.getElementById("TriangleButton").style.background='buttonface';
