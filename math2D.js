@@ -1,6 +1,6 @@
 /**
  * @author Zachary Wartell, ...
- *
+ *@moreAuthoring Mathew Brien
  * math2D.js is a set of 2D geometry related math functions and classes.
  *
  * Students are given a initial set of classes and functions are expected to extend these and add

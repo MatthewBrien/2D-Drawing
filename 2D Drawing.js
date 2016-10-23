@@ -1,6 +1,6 @@
 /**
  * @author Jialei Li, K.R. Subrmanian, Zachary Wartell
- *
+ *@moreAuthoring Mathew Brien
  *
  */
 
@@ -15,6 +15,8 @@
 var draw_mode = {DrawLines: 0, DrawTriangles: 1, DrawQuads:2, ClearScreen: 3, None: 4};
 //if an object is selected
 var selected = null;
+//save last selected point, so we itterated over selected objects intead of re-searching for objects
+var last_point = [null, null];
 // 'curr_draw_mode' tracks the active user interaction mode
 var curr_draw_mode = draw_mode.DrawLines;
 
@@ -316,15 +318,22 @@ if(ev.which == 1){
 }
 
   if(ev.which == 3){
-    for(var i = 0; i < line_verts.length; i+=2 ){
-    //  console.log("Distance from line " + i/2 + " is " + pointLineDist([x,y], line_verts[i],line_verts[i+1])  );
-      if(pointLineDist([x,y], line_verts[i],line_verts[i+1]) < .01){
+    if(last_point[0] == x && last_point[1] == y){
+      //TODO itterate over seleted objects, probably with a circular queue
+    }
+    else{
+      last_point[0] = x;
+      last_point[1] = y;
+
+      for(var i = 0; i < line_verts.length; i+=2 ){
+        if(pointLineDist([x,y], line_verts[i],line_verts[i+1]) < .01){
         console.log("line " + i/2 +" was selected");
-        selected = ["line", i];
+          selected = ["line", i];
+          //TODO push object to selected array
+        }
       }
     }
-
-  }
+  }//end if (ev.which == 3)
 }
 
 /*
@@ -416,8 +425,7 @@ function drawObjects(gl, a_Position, u_FragColor) {
  * @param {Number[] | Number[][]} v
  * @returns {Float32Array}
  */
-function flatten(v)
-{
+function flatten(v){
     var n = v.length;
     var elemsAreArrays = false;
 
