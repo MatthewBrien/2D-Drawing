@@ -14,7 +14,7 @@
 // 'draw_mode' are names of the different user interaction modes.
 var draw_mode = {DrawLines: 0, DrawTriangles: 1, DrawQuads:2, ClearScreen: 3, None: 4};
 //if an object is selected
-var selected = null;
+var selected = [];
 //save last selected point, so we itterated over selected objects intead of re-searching for objects
 var last_point = [null, null];
 // 'curr_draw_mode' tracks the active user interaction mode
@@ -28,6 +28,7 @@ var vBuffer_Quad;
 // Array's storing 2D vertex coordinates of points, lines, triangles, etc.
 // Each array element is an array of size 2 storing the x,y coordinate.
 var points = [], line_verts = [], tri_verts = [], quad_verts = [];
+var selected_points = [];
 var line_colors = [], tri_colors = [],   quad_colors = [];
 var draw_order = [];
 // count number of points clicked for new line
@@ -218,7 +219,7 @@ function main() {
  * @returns {undefined}
  */
 function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
- //  console.log(ev.which);
+    selected_points = [];
     var x = ev.clientX; // x coordinate of a mouse pointer
     var y = ev.clientY; // y coordinate of a mouse pointer
     var rect = ev.target.getBoundingClientRect();
@@ -293,14 +294,17 @@ if(ev.which == 1){
         draw_order.push("quad");
       }
   }
-    drawObjects(gl,a_Position, u_FragColor);
+
 }
 
   if(ev.which == 3){
     if(last_point[0] == x && last_point[1] == y){
+      //delete previous verticies, show next verticies
+
       //TODO itterate over seleted objects, probably with a circular queue
     }
     else{
+      selected = [];
       last_point[0] = x;
       last_point[1] = y;
       //find any objects that might have been selected, add the type and index to selected array
@@ -313,33 +317,48 @@ if(ev.which == 1){
       for(var i = 0; i<tri_verts.length; i+=3){
         bcc =   barycentric(tri_verts[i], tri_verts[i+1],tri_verts[i+2], [x,y]);
         if(inside(bcc[0],bcc[1], bcc[2])){
-          console.log("inside triangle" + i/3);
-        }
-        else{
-         console.log("outside triangle " + i/3);
+          selected.push( {"type":"triangle", "index":i});
         }
       }
       for(var i =0; i < quad_verts.length; i+=5){
+        //check in each of the three triangles making up the quad
         bcc = barycentric(quad_verts[i], quad_verts[i+1],quad_verts[i+2], [x,y]);
         if(inside(bcc[0],bcc[1],bcc[2])){
-          console.log("inside quad " + i/5);
+          selected.push( {"type":"quad", "index":i});
         }
         else{
           bcc = barycentric(quad_verts[i+1], quad_verts[i+2],quad_verts[i+3], [x,y]);
           if(inside(bcc[0],bcc[1],bcc[2])){
-            console.log("inside quad " + i/5);
+            selected.push( {"type":"quad", "index":i});
           }
           else{
             bcc = barycentric(quad_verts[i+2], quad_verts[i+3],quad_verts[i+4], [x,y]);
             if(inside(bcc[0],bcc[1],bcc[2])){
-              console.log("inside quad " + i/5);
+              selected.push( {"type":"quad", "index":i});
             }
           }
         }
       }//end for(quad_verts)
+    }//end else (for if point has not changed)
+    if(selected.length >0){
+      //show vertecies of selected object
+      selected_points = [];
+      console.log(JSON.stringify(selected));
+      if(selected[0].type == "line" ){
+        selected_points.push(line_verts[selected[0].index]);
+        selected_points.push(line_verts[selected[0].index+1]);
+        console.log(selected_points);
+      }
+      if(selected[0].type == "triangle"){
+
+      }
+      if(selected[0].type == "quad"){
+
+      }
     }
   }//end if (ev.which == 3)
-}
+  drawObjects(gl,a_Position, u_FragColor);
+}//end handleMouseDown
 
 /*
  * Draw all objects
@@ -416,6 +435,14 @@ function drawObjects(gl, a_Position, u_FragColor) {
     gl.enableVertexAttribArray(a_Position);
     gl.uniform4f(u_FragColor, 1.0, 1.0, 1.0, 1.0);
     gl.drawArrays(gl.POINTS, 0, points.length);
+
+    // draw vertecies of seleted objects
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Pnt);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(selected_points), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_Position);
+    gl.uniform4f(u_FragColor, 1.0, 0.0, 0.0, 1.0);
+    gl.drawArrays(gl.POINTS, 0, selected_points.length);
 }
 /**
  * Converts 1D or 2D array of Number's 'v' into a 1D Float32Array.
