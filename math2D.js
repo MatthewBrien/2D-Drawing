@@ -183,34 +183,61 @@ Vec2.prototype.mag = function ()
  * Compute the barycentric coordinate of point 'p' with respect to barycentric coordinate system
  * defined by points p0,p1,p2.
  *
- * @param {Vec2} p0 - first point of barycentric coordinate system
- * @param {Vec2} p1 - second point of barycentric coordinate system
- * @param {Vec2} p2 - third point of barycentric coordinate system
- * @param {Vec2} p  - point to compute the barycentric coordinate of
+ * @param {Vec2} P - first point of barycentric coordinate system
+ * @param {Vec2} Q - second point of barycentric coordinate system
+ * @param {Vec2} R - third point of barycentric coordinate system
+ * @param {Vec2} T  - point to compute the barycentric coordinate of
  * @returns {[Number, Number, Number]} - array with barycentric coordinates of 'p'
  */
-function barycentric (p0, p1, p2, p)
+function barycentric(P, Q, R, T)
 {
-    /*
-     * \todo needs to be implemented
-     */
-    return [0,0,0];
-}
+  //coordinates of point T in terms of Cartesian Coorditantes
+  var alpha = ((Q[1] - R[1]) * (T[0] - R[0]) + (R[0] - Q[0]) * (T[1] - R[1])) /
+              ((Q[1] - R[1]) * (P[0] - R[0]) + (R[0] - Q[0]) * (P[1] - R[1]));
 
+  var beta  = ((R[1] - P[1]) * (T[0] - R[0]) + (P[0] - R[0]) * (T[1] - R[1]))/
+              ((Q[1] - R[1]) * (P[0] - R[0]) + (R[0] - Q[0]) * (P[1] - R[1]))
+
+  var gama  = 1 - alpha - beta;
+  return [alpha, beta, gama];
+}
+//helpher function, returns in a point is inside or outside of a triangle
+function inside(alpha, beta, gama){
+  if(alpha >= 0 && alpha <= 1 && beta >= 0 && beta <= 1 && gama >= 0 && gama <= 1){
+    return true;
+  }
+  return false;
+}
 /**
  * Compute distance between point 'p' and the line through points 'p0' and 'p1'
  * @param {Vec2} p0 - first point on line
  * @param {Vec2} p1 - second point on line
  * @param {Vec2} p  - point for which we are computing distance
- * @returns {undefined}
+ * @returns a positive number
  */
-function pointLineDist(p0, p1, p)
-{
-     /*
-     * \todo needs to be implemented
-     */
-    return 0;
-}
+ //take a point, and a line (defined by two points) and returns the distance
+ function pointLineDist(P, A, B){
+   //P is test point
+   //a is line start
+   //b  is line end
+   //M is line direction - slope
+   var M = subtract_points(B,A); // get line direction vector
+   var T = dot_product(M, subtract_points(P,A)) / dot_product(M,M);
+   //var D =  subtract_points(P, add_points(B, scale_vector(T,M)))//|P−(B + t0M)|.
+   var D;
+   if(T <=0){
+     D =  abs_subtract_vectors(P,A);
+   }
+   if(T< 1){
+     D = abs_subtract_vectors(P, add_points(A, scale_vector(T,M)));
+   }
+   else{
+     D = abs_subtract_vectors(P, add_points(A,M));
+   }
+
+   D =  Math.sqrt((D[0]*D[0] + D[1]*D[1]));
+   return D;
+   }
 
 /**
  * This contains misc. code for testing the functions in this file.
@@ -248,29 +275,7 @@ function math2d_test()
     pointLineDist([1,2],[0,0],[5,5]);
 }
 
-//take a point, and a line (defined by two points) and returns the distance
-function pointLineDist(P, A, B){
-  //P is test point
-  // a is line start
-  //b  is line end
-  //M is line direction - slope
-  var M = subtract_points(B,A); // get line direction vector
-  var T = dot_product(M, subtract_points(P,A)) / dot_product(M,M);
-  //var D =  subtract_points(P, add_points(B, scale_vector(T,M)))//|P−(B + t0M)|.
-  var D;
-  if(T <=0){
-    D =  abs_subtract_vectors(P,A);
-  }
-  if(T< 1){
-    D = abs_subtract_vectors(P, add_points(A, scale_vector(T,M)));
-  }
-  else{
-    D = abs_subtract_vectors(P, add_points(A,M));
-  }
 
-  D =  Math.sqrt((D[0]*D[0] + D[1]*D[1]));
-  return D;
-  }
 //get dot product of two vectors(2D only)
 function dot_product(A,B){
   product = 0;
@@ -282,7 +287,7 @@ function dot_product(A,B){
 function add_points(A,B){
   var C = [];
   for(var i = 0; i < A.length; i++){
-    C.push( A[i]+B[i]);
+    C.push(A[i]+B[i]);
   }
   return C;
 }

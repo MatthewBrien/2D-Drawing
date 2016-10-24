@@ -21,21 +21,17 @@ var last_point = [null, null];
 var curr_draw_mode = draw_mode.DrawLines;
 
 // GL array buffers for points, lines, and triangles
-// TODO Student Note: need similar buffers for other draw modes...
 var vBuffer_Pnt, vBuffer_Line;
 var vBuffer_Tri;
 var vBuffer_Quad;
 
 // Array's storing 2D vertex coordinates of points, lines, triangles, etc.
 // Each array element is an array of size 2 storing the x,y coordinate.
-// \todo Student Note: need similar arrays for other draw modes...
 var points = [], line_verts = [], tri_verts = [], quad_verts = [];
 var line_colors = [], tri_colors = [],   quad_colors = [];
-
+var draw_order = [];
 // count number of points clicked for new line
 var num_pts = 0;
-
-// \todo need similar counters for other draw modes...
 
 var current_colors = [0,100,0];
 /*****
@@ -44,7 +40,7 @@ var current_colors = [0,100,0];
  *
  *****/
 function main() {
-    math2d_test();
+    //math2d_test();
 
     /**
      **      Initialize WebGL Components
@@ -89,16 +85,6 @@ function main() {
       console.log("Failed to create quad buffer");
       return -1;
     }
-
-/*
-    var skeleton=true;
-    if(skeleton)
-    {
-        document.getElementById("App_Title").innerHTML ;
-    }
-*/
-
-
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
     updateColor(current_colors);  //fill color preview canvas
@@ -121,8 +107,6 @@ function main() {
     /**
      **      Set Event Handlers
      **
-     **  Student Note: the WebGL book uses an older syntax. The newer syntax, explicitly calling addEventListener, is preferred.
-     **  See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
      **/
     // set event handlers buttons
     document.getElementById("LineButton").addEventListener(
@@ -135,7 +119,6 @@ function main() {
                 curr_draw_mode = draw_mode.DrawLines;
                 change_buttons("LineButton");
             });
-
     document.getElementById("TriangleButton").addEventListener(
             "click",
             function () {
@@ -185,7 +168,6 @@ function main() {
 
                 curr_draw_mode = draw_mode.DrawLines;
             });
-
     // Color sliders update global current color variable, and the color preview canvas
     document.getElementById("RedRange").addEventListener(
             "input",
@@ -206,13 +188,11 @@ function main() {
               current_colors[2] = document.getElementById("BlueRange").value;
                 updateColor(current_colors);
             });
-
     // init sliders
     //sliders are initialized from global current_colors variable;
     document.getElementById("RedRange").value = current_colors[0];
     document.getElementById("GreenRange").value = current_colors[1];
     document.getElementById("BlueRange").value = current_colors[2];
-
     // Register function (event handler) to be called on a mouse press
     canvas.addEventListener(
             "mousedown",
@@ -242,9 +222,6 @@ function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
     var x = ev.clientX; // x coordinate of a mouse pointer
     var y = ev.clientY; // y coordinate of a mouse pointer
     var rect = ev.target.getBoundingClientRect();
-
-    // Student Note: 'ev' is a MouseEvent (see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent)
-
     // convert from canvas mouse coordinates to GL normalized device coordinates
     x = ((x - rect.left) - canvas.width / 2) / (canvas.width / 2);
     y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2);
@@ -272,7 +249,8 @@ if(ev.which == 1){
                 //push color
                 line_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
                 num_pts = 0;
-                points.length = 0; //TODO, why are we changing lenght, an attribute?
+                points.length = 0;
+                draw_order.push("line");
             }
             break;
       case draw_mode.DrawTriangles:
@@ -285,6 +263,7 @@ if(ev.which == 1){
           tri_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
           num_pts = 0;
           points.length = 0;
+          draw_order.push("triangle");
         }
         break;
       case draw_mode.DrawQuads:
@@ -311,7 +290,7 @@ if(ev.which == 1){
         quad_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
         num_pts = 0;
         points.length = 0;
-        console.log(quad_verts);
+        draw_order.push("quad");
       }
   }
     drawObjects(gl,a_Position, u_FragColor);
@@ -324,13 +303,17 @@ if(ev.which == 1){
     else{
       last_point[0] = x;
       last_point[1] = y;
-
+      //find any objects that might have been selected, add the type and index to selected array
       for(var i = 0; i < line_verts.length; i+=2 ){
         if(pointLineDist([x,y], line_verts[i],line_verts[i+1]) < .01){
-        console.log("line " + i/2 +" was selected");
-          selected = ["line", i];
-          //TODO push object to selected array
+          selected.push( {"type":"line", "index":i});
         }
+      }
+      for(var i = 0; i<tri_verts.length; i+=3){
+        barycentric(tri_verts[i], tri_verts[i+1],tri_verts[i+2], [x,y]);
+      }
+      for(var i =0; i < quad_verts.length; i+=5){
+
       }
     }
   }//end if (ev.which == 3)
@@ -365,53 +348,46 @@ function clearUndrawnPoints(){
 }
 
 function drawObjects(gl, a_Position, u_FragColor) {
+    var L = 0; //line counter
+    var T = 0; //triangle counter
+    var Q = 0; //quad coutner
 
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // draw lines
-    if (line_verts.length) {
-        // enable the line vertex
+   for(var i = 0; i<draw_order.length; i++){
+      //case, draw, update L, T, Q
+      if(draw_order[i] == "line"){
         gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Line);
         // set vertex data into buffer (inefficient)
         gl.bufferData(gl.ARRAY_BUFFER, flatten(line_verts), gl.STATIC_DRAW);
         // share location with shader
         gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(a_Position);
-
-        //for each line, get vertices and color
-        for(var i = 0; i< line_colors.length; i++){
-          //get matching color and line
-          gl.uniform4f(u_FragColor, line_colors[i][0]/100, line_colors[i][1]/100, line_colors[i][2]/100, 1.0);
-          // draw the lines
-          gl.drawArrays(gl.LINES, i*2, 2);
-        }
+        gl.uniform4f(u_FragColor, line_colors[L][0]/100, line_colors[L][1]/100, line_colors[L][2]/100, 1.0);
+        gl.drawArrays(gl.LINES, L*2, 2);
+        L++;
+      }
+      if(draw_order[i] == "triangle"){
+        gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Tri);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(tri_verts), gl.STATIC_DRAW);
+        gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(a_Position);
+        gl.uniform4f(u_FragColor, tri_colors[T][0]/100, tri_colors[T][1]/100, tri_colors[T][2]/100, 1.0);
+        gl.drawArrays(gl.TRIANGLES, T*3, 3);
+        T++;
+      }
+      if(draw_order[i] == "quad"){
+        gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Quad);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(quad_verts), gl.STATIC_DRAW);
+        gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(a_Position);
+        gl.uniform4f(u_FragColor, quad_colors[Q][0]/100, quad_colors[Q][1]/100, quad_colors[Q][2]/100, 1.0);
+        gl.drawArrays(gl.TRIANGLE_STRIP, Q*5, 5);
+        Q++;
+      }
     }
-
-    //draw triangles
-   if(tri_verts.length){
-     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Tri);
-     gl.bufferData(gl.ARRAY_BUFFER, flatten(tri_verts), gl.STATIC_DRAW);
-     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-     gl.enableVertexAttribArray(a_Position);
-     for(var i = 0; i < tri_colors.length; i++){
-       gl.uniform4f(u_FragColor, tri_colors[i][0]/100, tri_colors[i][1]/100, tri_colors[i][2]/100, 1.0);
-       gl.drawArrays(gl.TRIANGLES, i*3, 3);
-     }
-   }
-
-   // draw quads
-   if(quad_verts.length){
-     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Quad);
-     gl.bufferData(gl.ARRAY_BUFFER, flatten(quad_verts), gl.STATIC_DRAW);
-     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-     gl.enableVertexAttribArray(a_Position);
-     for(var i = 0; i < quad_colors.length; i++){
-       gl.uniform4f(u_FragColor, quad_colors[i][0]/100, quad_colors[i][1]/100, quad_colors[i][2]/100, 1.0);
-       gl.drawArrays(gl.TRIANGLE_STRIP, i*5, 5);
-     }
-   }
-    // draw primitive creation vertices
+  // draw primitive creation vertices
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_Pnt);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
@@ -419,7 +395,6 @@ function drawObjects(gl, a_Position, u_FragColor) {
     gl.uniform4f(u_FragColor, 1.0, 1.0, 1.0, 1.0);
     gl.drawArrays(gl.POINTS, 0, points.length);
 }
-
 /**
  * Converts 1D or 2D array of Number's 'v' into a 1D Float32Array.
  * @param {Number[] | Number[][]} v
