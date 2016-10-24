@@ -309,12 +309,34 @@ if(ev.which == 1){
           selected.push( {"type":"line", "index":i});
         }
       }
+      var bcc = [] ; // barry centric coordinates alpha, beta, gama
       for(var i = 0; i<tri_verts.length; i+=3){
-        barycentric(tri_verts[i], tri_verts[i+1],tri_verts[i+2], [x,y]);
+        bcc =   barycentric(tri_verts[i], tri_verts[i+1],tri_verts[i+2], [x,y]);
+        if(inside(bcc[0],bcc[1], bcc[2])){
+          console.log("inside triangle" + i/3);
+        }
+        else{
+         console.log("outside triangle " + i/3);
+        }
       }
       for(var i =0; i < quad_verts.length; i+=5){
-
-      }
+        bcc = barycentric(quad_verts[i], quad_verts[i+1],quad_verts[i+2], [x,y]);
+        if(inside(bcc[0],bcc[1],bcc[2])){
+          console.log("inside quad " + i/5);
+        }
+        else{
+          bcc = barycentric(quad_verts[i+1], quad_verts[i+2],quad_verts[i+3], [x,y]);
+          if(inside(bcc[0],bcc[1],bcc[2])){
+            console.log("inside quad " + i/5);
+          }
+          else{
+            bcc = barycentric(quad_verts[i+2], quad_verts[i+3],quad_verts[i+4], [x,y]);
+            if(inside(bcc[0],bcc[1],bcc[2])){
+              console.log("inside quad " + i/5);
+            }
+          }
+        }
+      }//end for(quad_verts)
     }
   }//end if (ev.which == 3)
 }
