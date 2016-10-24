@@ -343,17 +343,20 @@ if(ev.which == 1){
     if(selected.length >0){
       //show vertecies of selected object
       selected_points = [];
-      console.log(JSON.stringify(selected));
       if(selected[0].type == "line" ){
         selected_points.push(line_verts[selected[0].index]);
         selected_points.push(line_verts[selected[0].index+1]);
-        console.log(selected_points);
       }
       if(selected[0].type == "triangle"){
-
+        selected_points.push(tri_verts[selected[0].index]);
+        selected_points.push(tri_verts[selected[0].index+1]);
+        selected_points.push(tri_verts[selected[0].index+2]);
       }
       if(selected[0].type == "quad"){
-
+        selected_points.push(quad_verts[selected[0].index]);
+        selected_points.push(quad_verts[selected[0].index+1]);
+        selected_points.push(quad_verts[selected[0].index+2]);
+        selected_points.push(quad_verts[selected[0].index+3]);
       }
     }
   }//end if (ev.which == 3)
