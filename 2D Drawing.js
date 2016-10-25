@@ -15,6 +15,7 @@
 var draw_mode = {DrawLines: 0, DrawTriangles: 1, DrawQuads:2, ClearScreen: 3, None: 4};
 //if an object is selected
 var selected = [];
+var selected_index; //cursor to currently selected object in the selected array
 //save last selected point, so we itterated over selected objects intead of re-searching for objects
 var last_point = [null, null];
 // 'curr_draw_mode' tracks the active user interaction mode
@@ -301,9 +302,7 @@ if(ev.which == 1){
 
   if(ev.which == 3){
     if(last_point[0] == x && last_point[1] == y){
-      //delete previous verticies, show next verticies
-
-      //TODO itterate over seleted objects, probably with a circular queue
+      selected_index = (selected_index + 1 ) % selected.length;
     }
     else{
       selected = [];
@@ -341,24 +340,26 @@ if(ev.which == 1){
           }
         }
       }//end for(quad_verts)
+      if(selected.length > 0)
+          selected_index = 0;
     }//end else (for if point has not changed)
     if(selected.length >0){
       //show vertecies of selected object
       selected_points = [];
-      if(selected[0].type == "line" ){
-        selected_points.push(line_verts[selected[0].index]);
-        selected_points.push(line_verts[selected[0].index+1]);
+      if(selected[selected_index].type == "line" ){
+        selected_points.push(line_verts[selected[selected_index].index]);
+        selected_points.push(line_verts[selected[selected_index].index+1]);
       }
-      if(selected[0].type == "triangle"){
-        selected_points.push(tri_verts[selected[0].index]);
-        selected_points.push(tri_verts[selected[0].index+1]);
-        selected_points.push(tri_verts[selected[0].index+2]);
+      if(selected[selected_index].type == "triangle"){
+        selected_points.push(tri_verts[selected[selected_index].index]);
+        selected_points.push(tri_verts[selected[selected_index].index+1]);
+        selected_points.push(tri_verts[selected[selected_index].index+2]);
       }
-      if(selected[0].type == "quad"){
-        selected_points.push(quad_verts[selected[0].index]);
-        selected_points.push(quad_verts[selected[0].index+1]);
-        selected_points.push(quad_verts[selected[0].index+2]);
-        selected_points.push(quad_verts[selected[0].index+3]);
+      if(selected[selected_index].type == "quad"){
+        selected_points.push(quad_verts[selected[selected_index].index]);
+        selected_points.push(quad_verts[selected[selected_index].index+1]);
+        selected_points.push(quad_verts[selected[selected_index].index+2]);
+        selected_points.push(quad_verts[selected[selected_index].index+3]);
       }
     }
   }//end if (ev.which == 3)
