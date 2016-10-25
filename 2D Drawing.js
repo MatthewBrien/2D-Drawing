@@ -145,7 +145,56 @@ function main() {
     document.getElementById("DeleteButton").addEventListener(
       "click",
       function(){
-        console.log("TODO: do something when delete button is clicked")
+        if(selected[selected_index].type == "line"){
+          line_verts.splice(selected[selected_index].index, 2);
+          var i = selected[selected_index].index / 2;
+          line_colors.splice(i, 1);
+          var c = 0;
+          while( i >= 0 && c < draw_order.length){
+            if(draw_order[c] == "line"){
+              if(i == 0){
+                draw_order.splice(c, 1);
+                i--;
+              }
+              i--;
+            }
+            c++;
+          }
+        }
+        if(selected[selected_index].type == "triangle"){
+          tri_verts.splice(selected[selected_index].index, 3);
+          var i = selected[selected_index].index / 3;
+          tri_colors.splice(i, 1);
+          var c = 0;
+            while( i >= 0 && c < draw_order.length){
+              if(draw_order[c] == "triangle"){
+                if(i == 0){
+                  draw_order.splice(c, 1);
+                  i--;
+                }
+                i--;
+              }
+              c++;
+            }
+        }
+        if(selected[selected_index].type == "quad"){
+          quad_verts.splice(selected[selected_index].index, 5);
+          var i = selected[selected_index].index / 5;
+          quad_colors.splice(i, 1);
+          var c = 0;
+          while( i >= 0 && c < draw_order.length){
+            if(draw_order[c] == "quad"){
+              if(i == 0){
+                draw_order.splice(c, 1);
+                i--;
+              }
+              i--;
+            }
+            c++;
+          }
+        }
+      selected_points.splice(0, selected_points.length);
+      drawObjects(gl,a_Position, u_FragColor);
       });
     document.getElementById("ClearScreenButton").addEventListener(
             "click",
@@ -298,6 +347,7 @@ if(ev.which == 1){
 }
 
   if(ev.which == 3){
+    clearUndrawnPoints();
     if(last_point[0] == x && last_point[1] == y){
       selected_index = (selected_index + 1 ) % selected.length;
     }
@@ -307,7 +357,7 @@ if(ev.which == 1){
       last_point[1] = y;
       //find any objects that might have been selected, add the type and index to selected array
       for(var i = 0; i < line_verts.length; i+=2 ){
-        if(pointLineDist([x,y], line_verts[i],line_verts[i+1]) < .01){
+        if(pointLineDist([x,y], line_verts[i],line_verts[i+1]) < .03){
           selected.push( {"type":"line", "index":i});
         }
       }
