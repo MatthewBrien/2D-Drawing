@@ -294,7 +294,7 @@ if(ev.which == 1){
                 //push next vertex
                 line_verts.push([x, y]);
                 //push color
-                line_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
+                line_colors.push(current_colors.slice());
                 num_pts = 0;
                 points.length = 0;
                 draw_order.push("line");
@@ -307,7 +307,7 @@ if(ev.which == 1){
         }
         else{
           tri_verts.push([x, y]);
-          tri_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
+          tri_colors.push(current_colors.slice());
           num_pts = 0;
           points.length = 0;
           draw_order.push("triangle");
@@ -334,7 +334,7 @@ if(ev.which == 1){
         for(var i = 0; i<4; i++){
           temp_verts.pop();
         }
-        quad_colors.push([current_colors[0],current_colors[1],current_colors[2]]);
+        quad_colors.push(current_colors.slice());
         num_pts = 0;
         points.length = 0;
         draw_order.push("quad");
@@ -393,18 +393,26 @@ if(ev.which == 1){
       if(selected[selected_index].type == "line" ){
         selected_points.push(line_verts[selected[selected_index].index]);
         selected_points.push(line_verts[selected[selected_index].index+1]);
+        //get selected line's color
+        updateSliders(line_colors[selected[selected_index].index / 2]);
       }
       if(selected[selected_index].type == "triangle"){
         selected_points.push(tri_verts[selected[selected_index].index]);
         selected_points.push(tri_verts[selected[selected_index].index+1]);
         selected_points.push(tri_verts[selected[selected_index].index+2]);
+        //get selected triangle's color
+        updateSliders(tri_colors[selected[selected_index].index / 3]);
       }
       if(selected[selected_index].type == "quad"){
         selected_points.push(quad_verts[selected[selected_index].index]);
         selected_points.push(quad_verts[selected[selected_index].index+1]);
         selected_points.push(quad_verts[selected[selected_index].index+2]);
         selected_points.push(quad_verts[selected[selected_index].index+3]);
+        //get selected quad's color
+        updateSliders(quad_colors[selected[selected_index].index / 5]);
       }
+
+
     }
   }//end if (ev.which == 3)
   drawObjects(gl,a_Position, u_FragColor);
@@ -493,8 +501,9 @@ function drawObjects(gl, a_Position, u_FragColor) {
     gl.uniform4f(u_FragColor, 1.0, 0.0, 0.0, 1.0);
     gl.drawArrays(gl.POINTS, 0, selected_points.length);
 }
+//takes a color, updates the sliders, the current color, and the color preview canvas
 function updateSliders(color){
-  current_colors = color;
+  current_colors = color.slice();
   document.getElementById("RedRange").value = current_colors[0];
   document.getElementById("GreenRange").value = current_colors[1];
   document.getElementById("BlueRange").value = current_colors[2];
