@@ -149,7 +149,7 @@ function main() {
     document.getElementById("ClearScreenButton").addEventListener(
             "click",
             function () {
-                // curr_draw_mode = draw_mode.ClearScreen;
+                curr_draw_mode = draw_mode.ClearScreen;
                 // clear the vertex arrays
                 while (points.length > 0)
                     points.pop();
@@ -165,6 +165,8 @@ function main() {
                     tri_colors.pop();
                 while(quad_colors.length >0)
                     quad_colors.pop();
+                while(draw_order.length > 0)
+                    draw_order.pop();
                 gl.clear(gl.COLOR_BUFFER_BIT);
 
                 curr_draw_mode = draw_mode.DrawLines;
