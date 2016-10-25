@@ -89,7 +89,7 @@ function main() {
     }
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
-    updateColor(current_colors);  //fill color preview canvas
+    updateColorPreview(current_colors);  //fill color preview canvas
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -223,26 +223,23 @@ function main() {
             "input",
             function () {
               current_colors[0] = document.getElementById("RedRange").value;
-                updateColor(current_colors);
+                updateColorPreview(current_colors);
             });
     document.getElementById("GreenRange").addEventListener(
             "input",
             function () {
               current_colors[1] = document.getElementById("GreenRange").value;
-                updateColor(current_colors);
+                updateColorPreview(current_colors);
 
             });
     document.getElementById("BlueRange").addEventListener(
             "input",
             function () {
               current_colors[2] = document.getElementById("BlueRange").value;
-                updateColor(current_colors);
+                updateColorPreview(current_colors);
             });
     // init sliders
-    //sliders are initialized from global current_colors variable;
-    document.getElementById("RedRange").value = current_colors[0];
-    document.getElementById("GreenRange").value = current_colors[1];
-    document.getElementById("BlueRange").value = current_colors[2];
+    updateSliders(current_colors);
     // Register function (event handler) to be called on a mouse press
     canvas.addEventListener(
             "mousedown",
@@ -495,4 +492,11 @@ function drawObjects(gl, a_Position, u_FragColor) {
     gl.enableVertexAttribArray(a_Position);
     gl.uniform4f(u_FragColor, 1.0, 0.0, 0.0, 1.0);
     gl.drawArrays(gl.POINTS, 0, selected_points.length);
+}
+function updateSliders(color){
+  current_colors = color;
+  document.getElementById("RedRange").value = current_colors[0];
+  document.getElementById("GreenRange").value = current_colors[1];
+  document.getElementById("BlueRange").value = current_colors[2];
+  updateColorPreview(current_colors);
 }

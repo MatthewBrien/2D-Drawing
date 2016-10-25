@@ -59,7 +59,7 @@
                 <div>Red: <input type="range" id="RedRange"></div>
                 <div>Green: <input type="range" id="GreenRange"></div>
                 <div>Blue: <input type="range" id="BlueRange"></div>  <br>
-                <canvas onload="updateColors([0,0,0])" id="CurrColor" width="200" height="10"></canvas>
+                <canvas onload="updateColorPreviews([0,0,0])" id="CurrColor" width="200" height="10"></canvas>
 
           </div>
                       <p id="Coords"> </p>
@@ -85,8 +85,9 @@
           function clearCoords(){
               document.getElementById("Coords").innerHTML = "Coordinates: ";
           }
-          function updateColor(colors){
+          function updateColorPreview(colors){
             console.log(colors[0] + " "+colors[1] + " "+colors[2] + " ") ;
+            console.log("in updateColorPreview ");
             red = Math.floor(colors[0]*2.55);
             green = Math.floor(colors[1]*2.55);
             blue = Math.floor(colors[2]*2.55);
