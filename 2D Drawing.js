@@ -15,7 +15,7 @@
 var draw_mode = {DrawLines: 0, DrawTriangles: 1, DrawQuads:2, ClearScreen: 3, None: 4};
 //if an object is selected
 var selected = [];
-var selected_index; //cursor to currently selected object in the selected array
+var selected_index = -1; //cursor to currently selected object in the selected array
 //save last selected point, so we itterated over selected objects intead of re-searching for objects
 var last_point = [null, null];
 // 'curr_draw_mode' tracks the active user interaction mode
@@ -151,26 +151,23 @@ function main() {
             "click",
             function () {
                 curr_draw_mode = draw_mode.ClearScreen;
-                // clear the vertex arrays
-                while (points.length > 0)
-                    points.pop();
-                while (line_verts.length > 0)
-                    line_verts.pop();
-                while (tri_verts.length > 0)
-                    tri_verts.pop();
-                while(quad_verts.length > 0)
-                    quad_verts.pop();
-                while(line_colors.length > 0)
-                    line_colors.pop();
-                while(tri_colors.length>0)
-                    tri_colors.pop();
-                while(quad_colors.length >0)
-                    quad_colors.pop();
-                while(draw_order.length > 0)
-                    draw_order.pop();
+                // clear all arrays and settings
+                selected.splice(0, selected.length);
+                selected_index = -1;
+                last_point = [null, null];
+                points.splice(0, points.length);
+                selected_points.splice(0,selected_points.length);
+                line_verts.splice(0, line_verts.length);
+                tri_verts.splice(0, tri_verts.length);
+                quad_verts.splice(0, quad_verts.length);
+                line_colors.splice(0, line_colors.length);
+                tri_colors.splice(0, tri_colors.length);
+                quad_colors.splice(0, quad_colors.length);
+                draw_order.splice(0, draw_order.length);
                 gl.clear(gl.COLOR_BUFFER_BIT);
 
                 curr_draw_mode = draw_mode.DrawLines;
+                changeButtons("LineButton");
             });
     // Color sliders update global current color variable, and the color preview canvas
     document.getElementById("RedRange").addEventListener(
