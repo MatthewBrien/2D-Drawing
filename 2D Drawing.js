@@ -204,7 +204,7 @@ function main() {
                 selected.splice(0, selected.length);
                 selected_index = -1;
                 last_point = [null, null];
-                points.splice(0, points.length);
+                clearUndrawnPoints();
                 selected_points.splice(0,selected_points.length);
                 line_verts.splice(0, line_verts.length);
                 tri_verts.splice(0, tri_verts.length);
@@ -436,8 +436,7 @@ function clearUndrawnPoints(){
             break;
     }
   }
-  while(points.length > 0)
-    points.pop();
+  points.splice(0, points.length);
   num_pts = 0;
 }
 
