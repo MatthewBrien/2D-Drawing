@@ -29,12 +29,10 @@ var vBuffer_Quad;
 // Array's storing 2D vertex coordinates of points, lines, triangles, etc.
 // Each array element is an array of size 2 storing the x,y coordinate.
 var points = [], line_verts = [], tri_verts = [], quad_verts = [];
-var selected_points = [];
+var selected_points = []; //vertecies of the selected object, used for highlighting
 var line_colors = [], tri_colors = [],   quad_colors = [];
 var draw_order = [];
-// count number of points clicked for new line
-var num_pts = 0;
-
+var num_pts = 0;// count number of points clicked for new line
 var current_colors = [0,100,0];
 /*****
  *
@@ -42,12 +40,9 @@ var current_colors = [0,100,0];
  *
  *****/
 function main() {
-    //math2d_test();
-
     /**
      **      Initialize WebGL Components
      **/
-
     // Retrieve <canvas> element
     var canvas = document.getElementById('webgl');
 
@@ -89,10 +84,9 @@ function main() {
     }
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
-    updateColorPreview(current_colors);  //fill color preview canvas
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
-
+    updateColorPreview(current_colors);  //fill color preview canvas (below sliders)
     // get GL shader variable locations
     var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
     if (a_Position < 0) {
@@ -139,8 +133,8 @@ function main() {
               clearUndrawnPoints(); //delete vertecies of undrawn shapes, and points
               drawObjects(gl,a_Position, u_FragColor);  //redraw without points
               }
-            changeButtons("QuadButton");
-            curr_draw_mode = draw_mode.DrawQuads;
+                changeButtons("QuadButton");
+                curr_draw_mode = draw_mode.DrawQuads;
           });
     document.getElementById("DeleteButton").addEventListener(
       "click",
@@ -150,6 +144,7 @@ function main() {
           var i = selected[selected_index].index / 2;
           line_colors.splice(i, 1);
           var c = 0;
+          //find nth line in draw_order,
           while( i >= 0 && c < draw_order.length){
             if(draw_order[c] == "line"){
               if(i == 0){
@@ -166,6 +161,7 @@ function main() {
           var i = selected[selected_index].index / 3;
           tri_colors.splice(i, 1);
           var c = 0;
+            //find nth triangle in draw_order
             while( i >= 0 && c < draw_order.length){
               if(draw_order[c] == "triangle"){
                 if(i == 0){
@@ -182,6 +178,7 @@ function main() {
           var i = selected[selected_index].index / 5;
           quad_colors.splice(i, 1);
           var c = 0;
+          //find nth quad in draw_order
           while( i >= 0 && c < draw_order.length){
             if(draw_order[c] == "quad"){
               if(i == 0){
@@ -214,11 +211,10 @@ function main() {
                 quad_colors.splice(0, quad_colors.length);
                 draw_order.splice(0, draw_order.length);
                 gl.clear(gl.COLOR_BUFFER_BIT);
-
                 curr_draw_mode = draw_mode.DrawLines;
                 changeButtons("LineButton");
             });
-    // Color sliders update global current color variable, and the color preview canvas
+    // Color sliders update global current color variable, the color of any selected object, and the color preview canvas
     document.getElementById("RedRange").addEventListener(
             "input",
             function () {
@@ -249,7 +245,7 @@ function main() {
                 updateColorPreview(current_colors);
                 drawObjects(gl,a_Position, u_FragColor);
             });
-    // init sliders
+    // set sliders to initial color
     updateSliders(current_colors);
     // Register function (event handler) to be called on a mouse press
     canvas.addEventListener(
@@ -302,13 +298,11 @@ if(ev.which == 1){
             }
             else {
                 // got final point of new line, so update the primitive arrays
-                //push next vertex
-                line_verts.push([x, y]);
-                //push color
-                line_colors.push(current_colors.slice());
+                line_verts.push([x, y]); //push final vertex
+                line_colors.push(current_colors.slice()); //push color
+                    draw_order.push("line");  //push to draw_order
                 num_pts = 0;
                 points.length = 0;
-                draw_order.push("line");
             }
             break;
       case draw_mode.DrawTriangles:
@@ -319,9 +313,9 @@ if(ev.which == 1){
         else{
           tri_verts.push([x, y]);
           tri_colors.push(current_colors.slice());
+          draw_order.push("triangle");
           num_pts = 0;
           points.length = 0;
-          draw_order.push("triangle");
         }
         break;
       case draw_mode.DrawQuads:
@@ -353,14 +347,15 @@ if(ev.which == 1){
   }
 
 }
-
+  //ev.which  == 3 is a right click
+  //when user right clicks, they are selecting objects, not drawing
   if(ev.which == 3){
-    clearUndrawnPoints();
-    if(last_point[0] == x && last_point[1] == y){
-      selected_index = (selected_index + 1 ) % selected.length;
+    clearUndrawnPoints(); //clear any previous selection from screen
+    if(last_point[0] == x && last_point[1] == y){ //if user has clicked the same point twice in a row, cycle through selected objects
+      selected_index = (selected_index + 1 ) % selected.length; //circular queue
     }
     else{
-      selected = [];
+      selected.splice(0, selected.length);
       last_point[0] = x;
       last_point[1] = y;
       //find any objects that might have been selected, add the type and index to selected array
@@ -371,7 +366,7 @@ if(ev.which == 1){
       }
       var bcc = [] ; // barry centric coordinates alpha, beta, gama
       for(var i = 0; i<tri_verts.length; i+=3){
-        bcc =   barycentric(tri_verts[i], tri_verts[i+1],tri_verts[i+2], [x,y]);
+        bcc = barycentric(tri_verts[i], tri_verts[i+1],tri_verts[i+2], [x,y]);
         if(inside(bcc[0],bcc[1], bcc[2])){
           selected.push( {"type":"triangle", "index":i});
         }
@@ -464,6 +459,7 @@ function drawObjects(gl, a_Position, u_FragColor) {
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    //itterate over the draw order array, drawing objects in the order they were created
    for(var i = 0; i<draw_order.length; i++){
       //case, draw, update L, T, Q
       if(draw_order[i] == "line"){
@@ -520,7 +516,7 @@ function updateSliders(color){
   document.getElementById("BlueRange").value = current_colors[2];
   updateColorPreview(current_colors);
 }
-
+//find selected item, update it's color in color array
 function updateObjectColor(){
   if(selected.length > 0){
       if(selected[selected_index].type == "line"){
