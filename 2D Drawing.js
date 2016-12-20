@@ -1,6 +1,5 @@
 /**
- * @author Jialei Li, K.R. Subrmanian, Zachary Wartell
- *@moreAuthoring Mathew Brien
+ * @author Jialei Li, K.R. Subrmanian, Zachary Wartell, Matthew Brien
  *
  */
 
@@ -273,6 +272,7 @@ function main() {
  */
 function handleMouseDown(ev, gl, canvas, a_Position, u_FragColor) {
     selected_points = [];
+    selected = [];
     var x = ev.clientX; // x coordinate of a mouse pointer
     var y = ev.clientY; // y coordinate of a mouse pointer
     var rect = ev.target.getBoundingClientRect();
@@ -393,7 +393,7 @@ if(ev.which == 1){
       if(selected.length > 0)
           selected_index = 0;
     }//end else (for if point has not changed)
-    if(selected.length >0){
+    if(selected.length > 0){
       //show vertecies of selected object
       selected_points = [];
       if(selected[selected_index].type == "line" ){
