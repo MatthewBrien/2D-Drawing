@@ -210,18 +210,23 @@ function inside(alpha, beta, gama){
 }
 /**
  * Compute distance between point 'p' and the line through points 'p0' and 'p1'
- * @param {Vec2} p0 - first point on line
- * @param {Vec2} p1 - second point on line
- * @param {Vec2} p  - point for which we are computing distance
+ * @param {Vec2} P  - point for which we are computing distance
+ * @param {Vec2} A - first point on line
+ * @param {Vec2} B - second point on line
  * @returns a positive number
  */
  //take a point, and a line (defined by two points) and returns the distance
  function pointLineDist(P, A, B){
-   //P is test point
-   //a is line start
-   //b  is line end
-   //M is line direction - slope
+
+   //check the order of the start and endpoints by comparing their X values, Lower X should be first
+   if(A[0] > B[0]){
+     var t = A;
+     A = B.slice();
+     B = t.slice();
+   }
+
    var M = subtract_points(B,A); // get line direction vector
+   var slope = M[1]/M[0];
    var T = dot_product(M, subtract_points(P,A)) / dot_product(M,M);
    //var D =  subtract_points(P, add_points(B, scale_vector(T,M)))//|P−(B + t0M)|.
    var D;
